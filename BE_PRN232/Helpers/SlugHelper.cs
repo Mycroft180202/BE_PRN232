@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
-namespace ManagementApi.Helpers;
+namespace BE_PRN232.Helpers;
 
 public class SlugHelper
 {

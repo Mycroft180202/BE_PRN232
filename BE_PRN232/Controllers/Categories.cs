@@ -1,10 +1,9 @@
-
 using BE_PRN232.Entities;
-using ManagementApi.Helpers;
-using ManagementApi.RequestDTO;
+using BE_PRN232.Helpers;
+using BE_PRN232.RequestDTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-namespace ManagementApi.Controllers;
+namespace BE_PRN232.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 public class Categories : ControllerBase

@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-namespace ManagementApi.RequestDTO;
+namespace BE_PRN232.RequestDTO;
 
 public class UpdateCategory
 {
