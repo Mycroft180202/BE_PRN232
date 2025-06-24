@@ -1,15 +1,16 @@
 using BE_PRN232.Entities;
 using BE_PRN232.Helpers;
 using BE_PRN232.RequestDTO;
+using BE_PRN232.ResponseDTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 namespace BE_PRN232.Controllers;
 [ApiController]
 [Route("api/[controller]")]
-public class Categories : ControllerBase
+public class CategoriesController : ControllerBase
 {
     private readonly EcommerceClothingDbContext _context;
-    public Categories(EcommerceClothingDbContext context)
+    public CategoriesController(EcommerceClothingDbContext context)
     {
         _context = context;
     }
@@ -23,21 +24,12 @@ public class Categories : ControllerBase
         try
         {
            var cateParents = await _context.Categories
-               .Include(c=>c.InverseParentCategory)
-               .Where(c=>c.ParentCategoryId == null)
+               .Include(c=>c.InverseParentCategory.Where(cl=>cl.Status))
+               .Where(c=>c.ParentCategoryId == null && c.Status)
                .AsNoTracking()
                .ToListAsync();
-           var response = cateParents.Select(c => new
-           {
-               Id = c.CategoryId,
-               Name = c.Name,
-               Slug = c.Slug,
-               Children = c.InverseParentCategory.Select(cl => new
-               {
-                   Id = cl.CategoryId, Name = cl.Name, Slug = cl.Slug
-               })
-           });
-            return Ok(response);
+           var response = cateParents.Select(c => new CategoryResponse(c));
+           return Ok(response);
         }
         catch (Exception ex)
         {
@@ -63,29 +55,29 @@ public class Categories : ControllerBase
                 .AsNoTracking()
                 .Select(c => c.CategoryId)
                 .ToListAsync();
-            if (newCategory.ParentCategoryId != null && parentCateIds.Contains(newCategory.ParentCategoryId.Value))
-            {
-                var category = new Category()
-                {
-                    Name = newCategory.Name, Slug = newCategory.Slug, ParentCategoryId = newCategory.ParentCategoryId,
-
-                };
-                if (newCategory.AutoSEO)
-                {
-                    category.Slug = SlugHelper.GenerateSlug(category.Name);
-                }
-                if (_context.Categories.Any(c => c.Slug == category.Slug))
-                {
-                    return BadRequest("Category Slug already exists");
-                }
-                _context.Categories.Add(category);
-                await _context.SaveChangesAsync();
-                return Ok("Category Created Successfully");
-            }
-            else
+            if (newCategory.ParentCategoryId != null && !parentCateIds.Contains(newCategory.ParentCategoryId.Value))
             {
                 return BadRequest("Parent Category Id is invalid");
+
             }
+            var category = new Category()
+            {
+                Name = newCategory.Name, 
+                Slug = newCategory.Slug, 
+                ParentCategoryId = newCategory.ParentCategoryId,
+                Status = true,
+            };
+            if (newCategory.AutoSEO)
+            {
+                category.Slug = SlugHelper.GenerateSlug(category.Name);
+            }
+            if (_context.Categories.Any(c => c.Slug == category.Slug))
+            {
+                return BadRequest("Category Slug already exists");
+            }
+            _context.Categories.Add(category);
+            await _context.SaveChangesAsync();
+            return Ok("Category Created Successfully");
            
         }
         catch (Exception ex)
@@ -164,4 +156,5 @@ public class Categories : ControllerBase
             return StatusCode(500, ex);
         }
     }
+    
 }
