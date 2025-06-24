@@ -18,8 +18,10 @@ public class ProductsController : ControllerBase
         _appSettings = appSettings;
     }
     /// <summary>
-    /// get product 
+    /// get products
     /// </summary>
+    /// <param name="page"></param>
+    /// <param name="size"></param>
     /// <param name="category"></param>
     /// <param name="brand"></param>
     /// <returns></returns>
@@ -32,6 +34,7 @@ public class ProductsController : ControllerBase
                 .Include(c => c.Category)
                 .Include(c => c.Brand)
                 .Include(p=>p.ProductVariants)
+                .Include(p=>p.ProductImages)
                 .AsQueryable();
 
             if (category > 0)
@@ -169,6 +172,7 @@ public class ProductsController : ControllerBase
                 .Include(p=>p.Category)
                 .Include(p=>p.Brand)
                 .Include(p=>p.ProductVariants)
+                .Include(p=>p.ProductImages)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.ProductId == id);
             if(product == null) return NotFound("Product not found");
@@ -194,6 +198,7 @@ public class ProductsController : ControllerBase
                 .Include(p=>p.Category)
                 .Include(p=>p.Brand)
                 .Include(p=>p.ProductVariants)
+                .Include(p=>p.ProductImages)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Slug == slug);
             if(product == null) return NotFound("Product not found");
