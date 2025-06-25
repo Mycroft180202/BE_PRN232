@@ -8,7 +8,9 @@ var pathImage = builder.Configuration["AppSettings:PathImage"];
 var clientUrl = builder.Configuration["AppSettings:ClientUrl"] ?? "https://localhost:3000";
 var baseUrl =  builder.Configuration["AppSettings:BaseUrl"] ?? "https://localhost:5000";
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
-
+builder.Services.AddSingleton(sp =>
+    sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<AppSettings>>().Value
+);
 builder.Services.AddDbContext<EcommerceClothingDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DbConnections"));
