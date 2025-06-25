@@ -163,7 +163,7 @@ public class ProductsController : ControllerBase
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    [HttpGet("/{id}")]
+    [HttpGet("{id}")]
     public async Task<IActionResult> GetById([FromRoute] int id)
     {
         try
