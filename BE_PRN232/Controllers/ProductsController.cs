@@ -180,6 +180,7 @@ public class ProductsController : ControllerBase
             return StatusCode(500, ex);
         }
     }
+
     /// <summary>
     /// get product by slug
     /// </summary>
