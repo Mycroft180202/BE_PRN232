@@ -63,37 +63,17 @@ namespace BE_PRN232.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RequestDTO.RegisterRequest request)
         {
+            //Kiểm tra xem email đã tồn tại chưa
             var userExists = await _context.Users.AnyAsync(u => u.Email == request.Email);
             if (userExists)
                 return BadRequest("Email đã tồn tại");
 
-            var user = new User
+            //Thực hiện register trong Service
+            var isDone = await _authService.register(request, _context);
+            if (!isDone)
             {
-                UserId = Guid.NewGuid(),
-                Email = request.Email,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                CreatedAt = DateTime.UtcNow,
-                EmailVerified = false,
-                IsActive = true
-            };
-
-            await _context.Users.AddAsync(user);
-
-            var token = Guid.NewGuid().ToString(); // Token dạng chuỗi ngẫu nhiên
-            var verifyToken = new Entities.EmailVerificationToken
-            {
-                UserId = user.UserId,
-                Token = token,
-                ExpiredAt = DateTime.UtcNow.AddMinutes(10)
-            };
-
-            await _context.EmailVerificationTokens.AddAsync(verifyToken);
-            await _context.SaveChangesAsync();
-
-            // Gửi email xác minh với link
-            await _emailService.SendEmailVerificationLinkAsync(user.Email, user.UserId.ToString(), token);
+                return Ok("Tài khoản chưa được tạo. Vui lòng kiểm tra lại thông tin.");
+            }
 
             return Ok("Tài khoản được tạo. Vui lòng kiểm tra email để xác minh.");
         }
