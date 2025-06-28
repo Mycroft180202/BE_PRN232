@@ -16,34 +16,21 @@ public partial class EcommerceClothingDbContext : DbContext
     }
 
     public virtual DbSet<Address> Addresses { get; set; }
-
     public virtual DbSet<Brand> Brands { get; set; }
-
     public virtual DbSet<Cart> Carts { get; set; }
-
     public virtual DbSet<CartItem> CartItems { get; set; }
-
     public virtual DbSet<Category> Categories { get; set; }
-
     public virtual DbSet<Order> Orders { get; set; }
-
     public virtual DbSet<OrderItem> OrderItems { get; set; }
-
     public virtual DbSet<Product> Products { get; set; }
-
     public virtual DbSet<ProductImage> ProductImages { get; set; }
-
     public virtual DbSet<ProductVariant> ProductVariants { get; set; }
-
     public virtual DbSet<Review> Reviews { get; set; }
-
     public virtual DbSet<Role> Roles { get; set; }
-
     public virtual DbSet<User> Users { get; set; }
-
     public virtual DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
-
     public virtual DbSet<Voucher> Vouchers { get; set; }
+    public virtual DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }  // <-- Thêm vào đây
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -297,6 +284,13 @@ public partial class EcommerceClothingDbContext : DbContext
                         j.IndexerProperty<Guid>("UserId").HasColumnName("UserID");
                         j.IndexerProperty<int>("RoleId").HasColumnName("RoleID");
                     });
+
+            // Thêm navigation collection cho EmailVerificationTokens
+            entity.HasMany(e => e.EmailVerificationTokens)
+                .WithOne(evt => evt.User)
+                .HasForeignKey(evt => evt.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_EmailVerificationToken_User");
         });
 
         modelBuilder.Entity<UserRefreshToken>(entity =>
@@ -327,8 +321,27 @@ public partial class EcommerceClothingDbContext : DbContext
             entity.Property(e => e.MinOrderAmount).HasColumnType("decimal(18, 2)");
         });
 
+        // Cấu hình EmailVerificationToken
+        modelBuilder.Entity<EmailVerificationToken>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_EmailVerificationToken");
+
+            entity.Property(e => e.Id).UseIdentityColumn();
+
+            entity.Property(e => e.Token).IsRequired().HasMaxLength(256);
+
+            entity.Property(e => e.ExpiredAt).IsRequired();
+
+            entity.Property(e => e.UserId).IsRequired();
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.EmailVerificationTokens)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_EmailVerificationToken_User");
+        });
+
         OnModelCreatingPartial(modelBuilder);
     }
-
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
