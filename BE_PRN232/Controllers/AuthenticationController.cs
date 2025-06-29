@@ -90,7 +90,7 @@ namespace BE_PRN232.Controllers
                 .FirstOrDefaultAsync(t => t.Token == token && t.UserId == userId && t.Purpose == "VerifyEmail");
 
             if (record == null || record.ExpiredAt < DateTime.UtcNow)
-                return BadRequest("Liên kết không hợp lệ hoặc đã hết hạn");
+                return BadRequest(_configuration["Error:Code601"]);
 
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
