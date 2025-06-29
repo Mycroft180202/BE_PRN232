@@ -1,7 +1,9 @@
-﻿using MailKit.Net.Smtp;
+﻿using BE_PRN232.Entities;
+using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Configuration;
 using MimeKit;
+using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 
 namespace BE_PRN232.Service.ServiceImp
@@ -14,7 +16,7 @@ namespace BE_PRN232.Service.ServiceImp
         {
             _configuration = configuration;
         }
-        public async Task SendEmailVerificationLinkAsync(string toEmail, string userId, string token)
+        public async Task SendEmailVerificationLinkAsync(string toEmail, string verifyLink)
         {
             var message = new MimeMessage();
 
@@ -22,8 +24,6 @@ namespace BE_PRN232.Service.ServiceImp
             message.To.Add(MailboxAddress.Parse(toEmail));
             message.Subject = "Xác minh địa chỉ email";
 
-            // Đường link xác minh (thay yourdomain.com bằng frontend hoặc backend của bạn)
-            var verifyLink = $"https://localhost:7217/api/Authentication/verify-email?userId={userId}&token={token}";
 
             message.Body = new TextPart("html")
             {
@@ -33,15 +33,56 @@ namespace BE_PRN232.Service.ServiceImp
                   <p>Liên kết sẽ hết hạn sau 10 phút.</p>"
             };
 
-            using var client = new SmtpClient();
-            await client.ConnectAsync(
-                _configuration["Email:SmtpServer"],
-                int.Parse(_configuration["Email:Port"]),
-                SecureSocketOptions.StartTls);
+            await SendMail(message);
+        }
+        public async Task SendResetPasswordLinkAsync(string toEmail, string resetLink)
+        {   
 
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("EcommerceClothing", _configuration["Email:From"]));
+            message.To.Add(MailboxAddress.Parse(toEmail));
+            message.Subject = "Khôi phục mật khẩu";
+
+
+            message.Body = new TextPart("html")
+            {
+                Text = $@"<p>Chúng tôi nhận được yêu cầu lấy lại mật khẩu từ bạn.</p>
+                  <p>Bấm vào liên kết bên dưới để lấy lại mật khẩu:</p>
+                  <p><a href='{resetLink}'>Nhấn để lấy lại</a></p>
+                  <p>Liên kết này sẽ hết hạn sau 10 phút.</p>"
+            };
+
+            await SendMail(message);
+        }
+
+        public async Task SendChangePasswordLinkAsync(string toEmail, string resetLink)
+        {
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("EcommerceClothing", _configuration["Email:From"]));
+            message.To.Add(MailboxAddress.Parse(toEmail));
+            message.Subject = "Đổi mật khẩu";
+
+            message.Body = new TextPart("html")
+            {
+                Text = $@"<p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu từ bạn.</p>
+                  <p>Bấm vào liên kết bên dưới để thay đổi mật khẩu:</p>
+                  <p><a href='{resetLink}'>Nhấn để đổi</a></p>
+                  <p>Liên kết này sẽ hết hạn sau 10 phút.</p>"
+            };
+
+            await SendMail( message);
+        }
+
+
+        public async Task SendMail(MimeMessage message)
+        {
+            using var client = new SmtpClient();
+            await client.ConnectAsync(_configuration["Email:SmtpServer"], int.Parse(_configuration["Email:Port"])
+                , SecureSocketOptions.StartTls);
             await client.AuthenticateAsync(_configuration["Email:From"], _configuration["Email:Password"]);
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
+
         }
     }
 }

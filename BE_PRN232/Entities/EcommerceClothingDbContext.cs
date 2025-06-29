@@ -332,6 +332,8 @@ public partial class EcommerceClothingDbContext : DbContext
 
             entity.Property(e => e.ExpiredAt).IsRequired();
 
+            entity.Property(e => e.Purpose).IsRequired();
+
             entity.Property(e => e.UserId).IsRequired();
 
             entity.HasOne(e => e.User)

@@ -2,6 +2,9 @@
 {
     public interface IEmailService
     {
-        Task SendEmailVerificationLinkAsync(string toEmail, string userId, string token);
+        Task SendEmailVerificationLinkAsync(string toEmail, string link);
+        Task SendResetPasswordLinkAsync(string toEmail, string link);
+        Task SendChangePasswordLinkAsync(string toEmail, string link);
+
     }
 }

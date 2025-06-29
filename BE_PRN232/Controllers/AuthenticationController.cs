@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace BE_PRN232.Controllers
 {
@@ -19,12 +20,14 @@ namespace BE_PRN232.Controllers
         private readonly IAuthService _authService;
         private readonly IEmailService _emailService;
         private readonly EcommerceClothingDbContext _context;
-        public AuthenticationController(JWTService jwtService, IAuthService authService, IEmailService emailService, EcommerceClothingDbContext context)
+        private readonly IConfiguration _configuration;
+        public AuthenticationController(JWTService jwtService, IAuthService authService, IEmailService emailService, EcommerceClothingDbContext context, IConfiguration configuration)
         {
             _jwtService = jwtService;
             _authService = authService;
             _emailService = emailService;
             _context = context;
+            _configuration = configuration;
         }
         [HttpPost("Login")]
         public IActionResult Login([FromBody] RequestDTO.LoginRequest request)
@@ -63,17 +66,19 @@ namespace BE_PRN232.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RequestDTO.RegisterRequest request)
         {
-            //Kiểm tra xem email đã tồn tại chưa
-            var userExists = await _context.Users.AnyAsync(u => u.Email == request.Email);
-            if (userExists)
-                return BadRequest("Email đã tồn tại");
-
             //Thực hiện register trong Service
             var isDone = await _authService.register(request, _context);
-            if (!isDone)
-            {
+            if (isDone.Equals(_configuration["Error:Code501"]))
+                return BadRequest("Email đã tồn tại");
+
+
+            if (isDone.Equals(_configuration["Error:Code301"]))
                 return Ok("Tài khoản chưa được tạo. Vui lòng kiểm tra lại thông tin.");
-            }
+
+
+            if (isDone.Equals(_configuration["Error:Code302"]))
+                return Ok("Tài khoản chưa được tạo. Vui lòng kiểm tra lại thông tin.");
+            
 
             return Ok("Tài khoản được tạo. Vui lòng kiểm tra email để xác minh.");
         }
@@ -82,7 +87,7 @@ namespace BE_PRN232.Controllers
         public async Task<IActionResult> VerifyEmail([FromQuery] Guid userId, [FromQuery] string token)
         {
             var record = await _context.EmailVerificationTokens
-                .FirstOrDefaultAsync(t => t.Token == token && t.UserId == userId);
+                .FirstOrDefaultAsync(t => t.Token == token && t.UserId == userId && t.Purpose == "VerifyEmail");
 
             if (record == null || record.ExpiredAt < DateTime.UtcNow)
                 return BadRequest("Liên kết không hợp lệ hoặc đã hết hạn");
@@ -98,6 +103,91 @@ namespace BE_PRN232.Controllers
 
             return Ok("Email đã được xác minh thành công!");
         }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] RequestDTO.ForgotPasswordRequest request)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (user == null)
+                return BadRequest(_configuration["Error:Code405"]);
+
+            var token = Guid.NewGuid().ToString();
+
+            var tokenEntry = new Entities.EmailVerificationToken
+            {
+                UserId = user.UserId,
+                Token = token,
+                ExpiredAt = DateTime.UtcNow.AddMinutes(10),
+                Purpose = "ResetPassword"
+            };
+
+            _context.EmailVerificationTokens.Add(tokenEntry);
+            await _context.SaveChangesAsync();
+
+
+            //Đây chỉ là link minh họa cần link front end để gửi
+            var resetLink = $"https://localhost:7217/api/Authentication/reset-password?userId={user.UserId}&token={token}";
+            // Gửi link có token và userId
+            await _emailService.SendResetPasswordLinkAsync(user.Email, resetLink);
+
+            return Ok("Hướng dẫn lấy lại mật khẩu đã được gửi đến email.");
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] RequestDTO.ResetPasswordRequest request)
+        {
+           var isResetpassword = await _authService.resetPassword(request , _context);
+            Console.WriteLine($"isResetpassword:{isResetpassword} + {_configuration["Error:Code602"]}");
+            if (isResetpassword.Equals(_configuration["Error:Code602"]))
+                return BadRequest(_configuration["Error:Code602"]);
+
+            if(isResetpassword.Equals(_configuration["Error:Code601"]))
+                return BadRequest(_configuration["Error:Code601"]);
+
+            if (isResetpassword.Equals(_configuration["Error:Code404"]))
+                return BadRequest(_configuration["Error:Code404"]);
+
+            if (isResetpassword.Equals(_configuration["Error:Code301"]))
+                return BadRequest(_configuration["Error:Code301"]);
+
+            return Ok("Đổi mật khẩu thành công.");
+        }
+        //[Authorize]
+        [HttpPost("request-change-password")]
+        public async Task<IActionResult> RequestChangePassword()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null) return Unauthorized();
+
+            var user = await _context.Users.FindAsync(Guid.Parse(userId));
+            if (user == null || !user.EmailVerified) return BadRequest(_configuration["Error:Code404"]);
+
+            // Tạo token mới
+            var token = Guid.NewGuid().ToString();
+
+
+            // Thêm token vào bảng EmailVerificationToken
+            var emailToken = new Entities.EmailVerificationToken
+            {
+                UserId = user.UserId,
+                Token = token,
+                ExpiredAt = DateTime.UtcNow.AddMinutes(10),
+                Purpose = "ResetPassword"
+            };
+
+            _context.EmailVerificationTokens.Add(emailToken);
+            await _context.SaveChangesAsync();
+
+            // Gửi mail
+            //Đây chỉ là link minh họa cần link front end để gửi
+            var resetLink = $"https://localhost:7217/api/Authentication/reset-password?userId={userId}&token={token}";
+            await _emailService.SendChangePasswordLinkAsync(user.Email, resetLink);
+
+            return Ok("Email đã đuợc gửi.");
+        }
+
+
 
     }
 

@@ -6,6 +6,7 @@ namespace BE_PRN232.Service
     public interface IAuthService
     {
         bool Login(LoginRequest request, User user);
-        Task<bool> register(RegisterRequest request, EcommerceClothingDbContext _context);
+        Task<string?> register(RegisterRequest request, EcommerceClothingDbContext _context);
+        Task<string?> resetPassword(ResetPasswordRequest request, EcommerceClothingDbContext _context);
     }
 }
