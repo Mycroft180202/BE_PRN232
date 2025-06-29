@@ -13,9 +13,10 @@ namespace BE_PRN232.Service.ServiceImp
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
 
-       
+
         public AuthService() { }
-        public AuthService(IConfiguration configuration, IEmailService emailService) {
+        public AuthService(IConfiguration configuration, IEmailService emailService)
+        {
             _emailService = emailService;
             _configuration = configuration;
         }
@@ -37,7 +38,7 @@ namespace BE_PRN232.Service.ServiceImp
             Console.WriteLine("isvalid:" + isValid);
             if (!isValid)
                 return false;
-            
+
             return true;
         }
 
@@ -64,7 +65,7 @@ namespace BE_PRN232.Service.ServiceImp
             };
 
             // Token dạng chuỗi ngẫu nhiên
-            var token = Guid.NewGuid().ToString(); 
+            var token = Guid.NewGuid().ToString();
 
             var verifyToken = new Entities.EmailVerificationToken
             {
@@ -96,8 +97,8 @@ namespace BE_PRN232.Service.ServiceImp
             catch (Exception ex)
             {
                 Console.WriteLine($"{ex.Message}");
-                 _context.Users.Remove(user);
-                 _context.EmailVerificationTokens.Remove(verifyToken);
+                _context.Users.Remove(user);
+                _context.EmailVerificationTokens.Remove(verifyToken);
                 await _context.SaveChangesAsync();
                 return _configuration["Error:Code302"];
             }
@@ -112,11 +113,12 @@ namespace BE_PRN232.Service.ServiceImp
                 return _configuration["Error:Code602"];
             try
             {
-                var tokenEntry = await _context.EmailVerificationTokens.FirstOrDefaultAsync(t =>
-              t.UserId == request.UserId &&
-              t.Token == request.Token &&
-              t.Purpose == "ResetPassword" &&
-              t.ExpiredAt > DateTime.UtcNow);
+                    var tokenEntry = await _context.EmailVerificationTokens.FirstOrDefaultAsync(t =>
+                t.UserId == request.UserId &&
+                t.Token == request.Token &&
+                t.Purpose == request.Purpose &&
+                t.ExpiredAt > DateTime.UtcNow);
+
                 if (tokenEntry == null)
                     return _configuration["Error:Code601"];
 
@@ -129,7 +131,7 @@ namespace BE_PRN232.Service.ServiceImp
                 _context.EmailVerificationTokens.Remove(tokenEntry);
 
                 await _context.SaveChangesAsync();
-               
+
             }
             catch (Exception ex)
             {
@@ -138,6 +140,6 @@ namespace BE_PRN232.Service.ServiceImp
             }
             return _configuration["Error:Code201"];
 
-        } 
+        }
     }
 }

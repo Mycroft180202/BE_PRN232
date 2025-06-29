@@ -126,7 +126,7 @@ namespace BE_PRN232.Controllers
 
 
             //Đây chỉ là link minh họa cần link front end để gửi
-            var resetLink = $"https://localhost:7217/api/Authentication/reset-password?userId={user.UserId}&token={token}";
+            var resetLink = $"https://localhost:7217/api/Authentication/reset-password?userId={user.UserId}&token={token}&purpose=ResetPassword";
             // Gửi link có token và userId
             await _emailService.SendResetPasswordLinkAsync(user.Email, resetLink);
 
@@ -173,7 +173,7 @@ namespace BE_PRN232.Controllers
                 UserId = user.UserId,
                 Token = token,
                 ExpiredAt = DateTime.UtcNow.AddMinutes(10),
-                Purpose = "ResetPassword"
+                Purpose = "ChangePassword"
             };
 
             _context.EmailVerificationTokens.Add(emailToken);
@@ -181,7 +181,7 @@ namespace BE_PRN232.Controllers
 
             // Gửi mail
             //Đây chỉ là link minh họa cần link front end để gửi
-            var resetLink = $"https://localhost:7217/api/Authentication/reset-password?userId={userId}&token={token}";
+            var resetLink = $"https://localhost:7217/api/Authentication/reset-password?userId={userId}&token={token}&purpose=ChangePassword";
             await _emailService.SendChangePasswordLinkAsync(user.Email, resetLink);
 
             return Ok("Email đã đuợc gửi.");
