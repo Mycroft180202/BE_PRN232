@@ -35,8 +35,8 @@ public class ProductResponse
 
     public DateTime? UpdatedAt { get; set; }
     
-    public List<ProductVariantResponse> Variants { get; set; } = new List<ProductVariantResponse>();
+    public List<ProductVariantResponse> Variants { get; set; }
 
-    public List<ProductImageResponse> Images { get; set; } = new List<ProductImageResponse>();
+    public List<ProductImageResponse> Images { get; set; } 
 
 }

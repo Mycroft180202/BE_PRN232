@@ -5,7 +5,7 @@ public class OrderResponse
 {
     public OrderResponse(Order order,string baseUrl)
     {
-        Id = order.OrderId.ToString();
+        Id = order.OrderId;
         UserId = order.UserId.ToString();
         OrderDate = order.OrderDate;
         OrderStatus = order.OrderStatus;
@@ -18,7 +18,7 @@ public class OrderResponse
         Notes = order.Notes;
         OrderItems = order.OrderItems.Select(o=>new OrderItemResponse(o,baseUrl)).ToList();
     }
-    public string Id { get; set; }
+    public Guid Id { get; set; }
 
     public string UserId { get; set; }
 

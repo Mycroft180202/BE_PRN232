@@ -115,10 +115,12 @@ public class OrdersController : ControllerBase
         try
         {
             var baseUrl = _appSettings.BaseUrl;
+            var guid = Guid.Parse(orderId);
             var order = await _context.Orders
-                .Include(o=>o.User)
-                .Include(o=>o.Voucher)
-                .FirstOrDefaultAsync(o=>o.OrderId.ToString() == orderId);
+                .Include(o=>o.OrderItems)
+                .ThenInclude(o=>o.Variant)
+                .FirstOrDefaultAsync(o=>o.OrderId == guid);
+            if(order == null) return NotFound("Order not found.");
             var response = new OrderResponse(order,baseUrl);
             return Ok(response);
         }
