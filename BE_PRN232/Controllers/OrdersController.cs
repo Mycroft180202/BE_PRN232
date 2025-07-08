@@ -129,4 +129,43 @@ public class OrdersController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+    [HttpPut("cancel-order/{orderId}")]
+    public async Task<IActionResult> CancelOrder([FromRoute] string orderId)
+    {
+        try
+        {
+            var guid = Guid.Parse(orderId);
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(o => o.Variant) 
+                .FirstOrDefaultAsync(o => o.OrderId == guid);
+
+            if (order == null) return NotFound("Order not found.");
+
+            if (order.OrderStatus != OrderStatus.Pending.ToString())
+            {
+                foreach (var item in order.OrderItems)
+                {
+                    if (item.Variant != null)
+                    {
+                        item.Variant.StockQuantity += item.Quantity;
+                        _context.ProductVariants.Update(item.Variant);
+                    }
+                }
+
+                order.OrderStatus = OrderStatus.Cancelled.ToString();
+                _context.Orders.Update(order);
+                await _context.SaveChangesAsync();
+
+                return Ok("Order has been cancelled and stock has been restored.");
+            }
+
+            return BadRequest($"Can't cancel order with order status {order.OrderStatus}");
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
 }
