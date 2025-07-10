@@ -152,7 +152,7 @@ namespace BE_PRN232.Controllers
 
             return Ok("Đổi mật khẩu thành công.");
         }
-        //[Authorize]
+        [Authorize]
         [HttpPost("request-change-password")]
         public async Task<IActionResult> RequestChangePassword()
         {
@@ -187,7 +187,22 @@ namespace BE_PRN232.Controllers
             return Ok("Email đã đuợc gửi.");
         }
 
+        [Authorize]
+        [HttpPost("Logout")]
+        public async Task<IActionResult> Logout()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
 
+            var userToken = await _context.UserRefreshTokens.FirstOrDefaultAsync(t => t.UserId == Guid.Parse(userId) && t.Token == token);
+            if (userToken != null)
+            {
+                _context.UserRefreshTokens.Remove(userToken); // hoặc: userToken.IsRevoked = true;
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok("Logged out successfully.");
+        }
 
     }
 
