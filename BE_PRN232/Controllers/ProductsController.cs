@@ -412,7 +412,31 @@ public class ProductsController : ControllerBase
         }
     }
 
-    [HttpGet("HottestProduct")]
+   
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchProduct([FromQuery] string keyword)
+    {
+        try
+        {
+            var baseUrl = _appSettings.BaseUrl;
+            var products = await _context.Products
+                .AsNoTracking()
+                .Include(p=>p.Category)
+                .Include(p=>p.Brand)
+                .Include(p=>p.ProductVariants)
+                .Include(p=>p.ProductImages)
+                .Where(p=>p.Name.ToUpper().Contains(keyword.ToUpper()))
+                .ToListAsync();
+            var response = products.Select(p => new ProductResponse(p, baseUrl)).ToList();
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+     [HttpGet("HottestProduct")]
     public async Task<IActionResult> SelectMostBuyProduct()
     {
         var product = await _context.Products.Include(p=> p.ProductImages).Include(p=> p.Category).Include(p=> p.Brand)
