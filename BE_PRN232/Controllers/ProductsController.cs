@@ -5,6 +5,7 @@ using BE_PRN232.RequestDTO;
 using BE_PRN232.ResponseDTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 namespace BE_PRN232.Controllers;
 [ApiController]
 [Route("api/[controller]")]
@@ -450,4 +451,36 @@ public class ProductsController : ControllerBase
         if (product == null) return BadRequest(_configuration["Error:Code403"]);
         return Ok(product);
     }
+
+    //[HttpGet("Sorted")]
+    //public async Task<IActionResult> SortedProductList([FromBody] int category, [FromBody] string orderByPrice, [FromBody] int brandId)
+    //{
+    //    var product = await _context.Products.Include(p => p.ProductImages).Include(p => p.Category).Include(p => p.Brand)
+    //        .Include(p => p.ProductVariants).ThenInclude(p => p.OrderItems)
+    //        .ToListAsync();
+    //    if (product == null) return BadRequest(_configuration["Error:Code403"]);
+
+    //    if (!string.IsNullOrWhiteSpace(orderByPrice))
+    //    {
+    //        if ("LowToHigh".Equals(orderByPrice))
+    //        {
+    //            product = product.OrderBy(p => p.ProductVariants.FirstOrDefault().Price).ToList();
+    //        }
+    //        else
+    //        {
+    //            product = product.OrderByDescending(p => p.ProductVariants.FirstOrDefault().Price).ToList();
+    //        }
+            
+    //    }
+    //    if (brandId > 0) 
+    //    {
+    //        product = product.Where(p=> p.BrandId == brandId).ToList();
+    //    }
+    //    if (category >0)
+    //    {
+    //        product = product.Where(p => p.CategoryId == category).ToList();
+    //    }
+    //    var response = product.Select(p => new ProductResponse(p, _appSettings.BaseUrl)).ToList();
+    //    return Ok(product);
+    //}
 }

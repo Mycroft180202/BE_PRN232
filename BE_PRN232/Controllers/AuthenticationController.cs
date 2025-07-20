@@ -69,15 +69,15 @@ namespace BE_PRN232.Controllers
             //Thực hiện register trong Service
             var isDone = await _authService.register(request, _context);
             if (isDone.Equals(_configuration["Error:Code501"]))
-                return BadRequest("Email đã tồn tại");
+                return BadRequest(_configuration["Error:Code501"]);
 
 
             if (isDone.Equals(_configuration["Error:Code301"]))
-                return Ok("Tài khoản chưa được tạo. Vui lòng kiểm tra lại thông tin.");
+                return BadRequest(_configuration["Error:Code301"]);
 
 
             if (isDone.Equals(_configuration["Error:Code302"]))
-                return Ok("Tài khoản chưa được tạo. Vui lòng kiểm tra lại thông tin.");
+                return BadRequest(_configuration["Error:Code302"]);
             
 
             return Ok("Tài khoản được tạo. Vui lòng kiểm tra email để xác minh.");

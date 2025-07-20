@@ -4,7 +4,6 @@ namespace BE_PRN232.ResponseDTO
 {
     public class UserDTO
     {
-
         public string FirstName { get; set; } = null!;
 
         public string LastName { get; set; } = null!;
