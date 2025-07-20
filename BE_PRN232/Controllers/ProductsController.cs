@@ -12,10 +12,12 @@ public class ProductsController : ControllerBase
 {
     private readonly EcommerceClothingDbContext _context;
     private readonly AppSettings _appSettings;
-    public ProductsController(EcommerceClothingDbContext context,AppSettings appSettings)
+    private readonly IConfiguration _configuration;
+    public ProductsController(EcommerceClothingDbContext context,AppSettings appSettings, IConfiguration configuration)
     {
         _context = context;
         _appSettings = appSettings;
+        _configuration = configuration;
     }
     /// <summary>
     /// get products
@@ -408,5 +410,20 @@ public class ProductsController : ControllerBase
         {
             return StatusCode(500, ex.Message);
         }
+    }
+
+    [HttpGet("HottestProduct")]
+    public async Task<IActionResult> SelectMostBuyProduct()
+    {
+        var product = await _context.Products.Include(p=> p.ProductImages).Include(p=> p.Category).Include(p=> p.Brand)
+            .Include(p => p.ProductVariants).ThenInclude(p=> p.OrderItems)
+            .GroupBy(p=> p.ProductId).Select(p => new
+            {
+                p.Key,
+                BoughtNumber = p.Count(),
+                Product = p.Select(p1 => new ProductResponse(p1,_appSettings.BaseUrl))
+            }).OrderByDescending(p=> p.BoughtNumber).Take(5).ToListAsync();
+        if (product == null) return BadRequest(_configuration["Error:Code403"]);
+        return Ok(product);
     }
 }

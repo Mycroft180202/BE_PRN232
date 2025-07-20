@@ -56,6 +56,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<JWTService>();
 builder.Services.AddScoped<IAuthService , AuthService>();
 builder.Services.AddScoped<IEmailService , EmailService>();
+builder.Services.AddScoped<IUserService , UserService>();
 var app = builder.Build();
 
 app.UseSwagger();
